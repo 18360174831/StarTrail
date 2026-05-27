@@ -15,9 +15,9 @@ export default function HomePage() {
   const loadData = async () => {
     try {
       const [diaryRes, venueRes, countdownRes]: any[] = await Promise.all([
-        getDiaryList({ limit: 1 }),
-        getVenueStats(),
-        getCountdownList(),
+        getDiaryList({ limit: 1 }).catch(() => ({ data: { pagination: { total: 0 } } })),
+        getVenueStats().catch(() => ({ data: { totalVenues: 0 } })),
+        getCountdownList().catch(() => ({ data: [] })),
       ])
       setStats({
         diaries: diaryRes?.data?.pagination?.total || 0,

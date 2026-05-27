@@ -23,6 +23,7 @@ export default function LoginPage() {
       } else {
         const res: any = await login(values.username, values.password)
         localStorage.setItem('token', res?.data?.token)
+        localStorage.removeItem('demo')
         Toast.show({ content: '登录成功', position: 'center' })
         navigate('/')
       }
@@ -31,6 +32,12 @@ export default function LoginPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleDemo = () => {
+    localStorage.setItem('token', 'demo-token')
+    localStorage.setItem('demo', 'true')
+    navigate('/')
   }
 
   return (
@@ -46,10 +53,17 @@ export default function LoginPage() {
         </h2>
 
         <Form layout="vertical" onFinish={onFinish} footer={
-          <Button block type="submit" color="primary" size="large" loading={loading}
-            className="login-btn !rounded-lg !h-11 !text-base">
-            {isRegister ? '注册' : '登录'}
-          </Button>
+          <div className="space-y-2">
+            <Button block type="submit" color="primary" size="large" loading={loading}
+              className="login-btn !rounded-lg !h-11 !text-base">
+              {isRegister ? '注册' : '登录'}
+            </Button>
+            <Button block size="large" fill="outline"
+              className="!rounded-lg !h-11 !text-base !border-gray-200"
+              onClick={handleDemo}>
+              体验 Demo
+            </Button>
+          </div>
         }>
           <Form.Item name="username" label="用户名" rules={[{ required: true, message: '请输入用户名' }]}>
             <Input placeholder="请输入用户名" clearable className="!rounded-lg" />

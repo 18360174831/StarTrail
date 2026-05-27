@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Card, Grid, Tag, Toast, Collapse, List, Empty } from 'antd-mobile'
+import { Card, Grid, Tag, Collapse, List, Empty } from 'antd-mobile'
 import { EnvironmentOutline } from 'antd-mobile-icons'
 import { getMyCheckins, getVenueStats } from '../../api/venue'
 
@@ -26,12 +26,13 @@ export default function MapPage() {
 
   const loadData = async () => {
     try {
-      const [checkinRes, statsRes]: any[] = await Promise.all([getMyCheckins(), getVenueStats()])
+      const [checkinRes, statsRes]: any[] = await Promise.all([
+        getMyCheckins().catch(() => ({ data: [] })),
+        getVenueStats().catch(() => ({ data: null })),
+      ])
       setCheckins(checkinRes?.data || [])
       setStats(statsRes?.data || null)
-    } catch {
-      Toast.show({ content: '加载失败', position: 'center' })
-    }
+    } catch {}
   }
 
   return (
@@ -39,22 +40,8 @@ export default function MapPage() {
       <h1 className="text-xl font-bold text-gray-800 mb-4">我的足迹</h1>
 
       <div className="flex gap-2 mb-4">
-        <Tag
-          className="cursor-pointer !px-4 !py-1"
-          color={activeTab === 'list' ? 'primary' : 'default'}
-          fill={activeTab === 'list' ? 'solid' : 'outline'}
-          onClick={() => setActiveTab('list')}
-        >
-          打卡记录
-        </Tag>
-        <Tag
-          className="cursor-pointer !px-4 !py-1"
-          color={activeTab === 'stats' ? 'primary' : 'default'}
-          fill={activeTab === 'stats' ? 'solid' : 'outline'}
-          onClick={() => setActiveTab('stats')}
-        >
-          统计
-        </Tag>
+        <Tag className="cursor-pointer !px-4 !py-1" color={activeTab === 'list' ? 'primary' : 'default'} fill={activeTab === 'list' ? 'solid' : 'outline'} onClick={() => setActiveTab('list')}>打卡记录</Tag>
+        <Tag className="cursor-pointer !px-4 !py-1" color={activeTab === 'stats' ? 'primary' : 'default'} fill={activeTab === 'stats' ? 'solid' : 'outline'} onClick={() => setActiveTab('stats')}>统计</Tag>
       </div>
 
       {activeTab === 'list' ? (
@@ -72,9 +59,7 @@ export default function MapPage() {
                     <div className="font-medium text-gray-800">{item.venue_name}</div>
                     {item.city && <div className="text-xs text-gray-500 mt-1">{item.city}</div>}
                   </div>
-                  <Tag color="success" fill="outline" className="!text-xs">
-                    {new Date(item.created_at).toLocaleDateString()}
-                  </Tag>
+                  <Tag color="success" fill="outline" className="!text-xs">{new Date(item.created_at).toLocaleDateString()}</Tag>
                 </div>
                 {item.note && <div className="text-sm text-gray-600 mt-2">{item.note}</div>}
               </Card>
@@ -101,7 +86,6 @@ export default function MapPage() {
                   </Grid.Item>
                 </Grid>
               </Card>
-
               {stats.cityStats?.length > 0 && (
                 <Collapse className="!rounded-xl overflow-hidden">
                   <Collapse.Panel key="cities" title="城市排行">

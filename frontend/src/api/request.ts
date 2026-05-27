@@ -18,7 +18,7 @@ request.interceptors.response.use(
   (err) => {
     if (err.response?.status === 401) {
       localStorage.removeItem('token')
-      window.location.href = '/login'
+      window.location.href = '/StarTrail/login'
     }
     return Promise.reject(err)
   }

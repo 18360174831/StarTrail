@@ -17,7 +17,7 @@ export default function LoginPage() {
           Toast.show({ content: '两次密码不一致', position: 'center' })
           return
         }
-        await register(values.username, values.password, values.nickname)
+        await register(values.username, values.password)
         Toast.show({ content: '注册成功，请登录', position: 'center' })
         setIsRegister(false)
       } else {
@@ -25,7 +25,7 @@ export default function LoginPage() {
         localStorage.setItem('token', res?.data?.token)
         localStorage.removeItem('demo')
         Toast.show({ content: '登录成功', position: 'center' })
-        navigate('/')
+        navigate('/', { replace: true })
       }
     } catch (err: any) {
       Toast.show({ content: err.response?.data?.error || '操作失败', position: 'center' })
@@ -37,7 +37,7 @@ export default function LoginPage() {
   const handleDemo = () => {
     localStorage.setItem('token', 'demo-token')
     localStorage.setItem('demo', 'true')
-    navigate('/')
+    window.location.href = '/'
   }
 
   return (
@@ -68,11 +68,6 @@ export default function LoginPage() {
           <Form.Item name="username" label="用户名" rules={[{ required: true, message: '请输入用户名' }]}>
             <Input placeholder="请输入用户名" clearable className="!rounded-lg" />
           </Form.Item>
-          {isRegister && (
-            <Form.Item name="nickname" label="昵称" rules={[{ required: true, message: '请输入昵称' }]}>
-              <Input placeholder="请输入昵称" clearable className="!rounded-lg" />
-            </Form.Item>
-          )}
           <Form.Item name="password" label="密码" rules={[{ required: true, message: '请输入密码' }]}>
             <Input type="password" placeholder="请输入密码" clearable className="!rounded-lg" />
           </Form.Item>

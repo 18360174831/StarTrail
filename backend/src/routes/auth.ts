@@ -8,7 +8,8 @@ const router = Router();
 
 router.post('/register', async (req: Request, res: Response) => {
   try {
-    const { username, password, confirmPassword, nickname } = req.body;
+    const { username, password, nickname } = req.body;
+    const confirmPassword = req.body.confirmPassword || req.body.password_confirm || password;
     if (!username || !password || !nickname) return res.status(400).json({ error: '用户名、密码和昵称为必填项' });
     if (password !== confirmPassword) return res.status(400).json({ error: '两次密码不一致' });
     if (password.length < 6) return res.status(400).json({ error: '密码至少6位' });

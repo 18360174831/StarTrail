@@ -150,6 +150,32 @@ router.get('/stats', (req: AuthRequest, res: Response) => {
 
 // ============ 场馆管理 ============
 
+// Get all venues (admin)
+router.get('/venues', (req: AuthRequest, res: Response) => {
+  try {
+    const db = getDB();
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const offset = (page - 1) * limit;
+
+    const venues = db.prepare(
+      'SELECT * FROM venues ORDER BY created_at DESC LIMIT ? OFFSET ?'
+    ).all(limit, offset);
+
+    const total = db.prepare('SELECT COUNT(*) as count FROM venues').get() as any;
+
+    res.json({
+      success: true,
+      data: {
+        items: venues,
+        pagination: { page, limit, total: total.count },
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.post('/venues', (req: AuthRequest, res: Response) => {
   try {
     const { name, address, city, country, lat, lng, type } = req.body;
@@ -198,6 +224,32 @@ router.delete('/venues/:id', (req: AuthRequest, res: Response) => {
 });
 
 // ============ 偶像管理 ============
+
+// Get all idols (admin)
+router.get('/idols', (req: AuthRequest, res: Response) => {
+  try {
+    const db = getDB();
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const offset = (page - 1) * limit;
+
+    const idols = db.prepare(
+      'SELECT * FROM idols ORDER BY created_at DESC LIMIT ? OFFSET ?'
+    ).all(limit, offset);
+
+    const total = db.prepare('SELECT COUNT(*) as count FROM idols').get() as any;
+
+    res.json({
+      success: true,
+      data: {
+        items: idols,
+        pagination: { page, limit, total: total.count },
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 router.post('/idols', (req: AuthRequest, res: Response) => {
   try {

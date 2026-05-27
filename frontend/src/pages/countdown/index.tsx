@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Card, FloatingBubble, Dialog, Toast, Empty, SwipeAction, Modal, Input, Image, CalendarPicker } from 'antd-mobile'
+import { Card, FloatingBubble, Dialog, Toast, Empty, SwipeAction, Input, Image, DatePicker } from 'antd-mobile'
 import { AddOutline, ClockCircleOutline, PictureOutline } from 'antd-mobile-icons'
 import { getCountdownList, createCountdown, deleteCountdown } from '../../api/countdown'
 import { uploadFile } from '../../api/upload'
@@ -21,7 +21,7 @@ export default function CountdownPage() {
   const [newTitle, setNewTitle] = useState('')
   const [newDate, setNewDate] = useState('')
   const [newCover, setNewCover] = useState('')
-  const [showCalendar, setShowCalendar] = useState(false)
+  const [showDatePicker, setShowDatePicker] = useState(false)
   const { checkAction } = useDemoCheck()
 
   useEffect(() => { loadCountdowns() }, [])
@@ -64,7 +64,7 @@ export default function CountdownPage() {
       return
     }
     try {
-      await createCountdown({ title: newTitle, target_date: newDate })
+      await createCountdown({ title: newTitle, target_date: newDate, cover_image: newCover || undefined })
       Toast.show({ content: '创建成功', position: 'center' })
       setShowAdd(false)
       setNewTitle('')
@@ -87,9 +87,10 @@ export default function CountdownPage() {
     }
   }
 
-  const handleDateSelect = (val: Date) => {
-    setNewDate(val.toISOString().split('T')[0])
-    setShowCalendar(false)
+  const handleDateConfirm = (val: Date) => {
+    const dateStr = val.toISOString().split('T')[0]
+    setNewDate(dateStr)
+    setShowDatePicker(false)
   }
 
   return (
@@ -107,7 +108,7 @@ export default function CountdownPage() {
               <SwipeAction key={cd.id} rightActions={[{ key: 'delete', text: '删除', color: 'danger', onClick: () => handleDelete(cd.id) }]}>
                 <Card className="!rounded-xl active:scale-[0.98] transition-transform overflow-hidden">
                   {cd.cover_url && (
-                    <div className="h-24 -mx-4 -mt-4 mb-3 overflow-hidden">
+                    <div className="h-24 -mx-4 -mt-4 mb-3 overflow-hidden relative">
                       <Image src={cd.cover_url} className="w-full h-24" fit="cover" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                     </div>
@@ -136,55 +137,58 @@ export default function CountdownPage() {
         </div>
       )}
 
-      <Modal
-        visible={showAdd}
-        onClose={() => setShowAdd(false)}
-        title="新建倒数日"
-        content={
-          <div className="space-y-4 py-2">
-            <div>
-              <div className="text-sm text-gray-600 mb-1">标题</div>
-              <Input placeholder="输入标题" value={newTitle} onChange={setNewTitle} />
-            </div>
-            <div>
-              <div className="text-sm text-gray-600 mb-1">目标日期</div>
-              <div className="flex gap-2">
-                <div className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-600">
-                  {newDate || '请选择日期'}
-                </div>
-                <button className="px-3 py-1 bg-purple-50 text-purple-600 rounded-lg text-sm" onClick={() => setShowCalendar(true)}>
-                  选择
-                </button>
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600 mb-1">封面图（可选）</div>
-              <label className="flex items-center gap-2 cursor-pointer">
-                {newCover ? (
-                  <Image src={newCover} className="w-20 h-20 rounded-lg" fit="cover" />
-                ) : (
-                  <div className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-                    <PictureOutline className="text-gray-400 text-xl" />
-                  </div>
-                )}
-                <input type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
-              </label>
-            </div>
-          </div>
-        }
-        actions={[
-          { key: 'cancel', text: '取消', onClick: () => setShowAdd(false) },
-          { key: 'confirm', text: '创建', primary: true, onClick: handleAdd },
-        ]}
-      />
-
-      {showCalendar && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end" onClick={() => setShowCalendar(false)}>
+      {/* 添加倒数日弹窗 */}
+      {showAdd && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end" onClick={() => setShowAdd(false)}>
           <div className="bg-white w-full rounded-t-2xl p-4" onClick={(e) => e.stopPropagation()}>
-            <CalendarPicker selectionMode="single" onChange={(val) => val && handleDateSelect(Array.isArray(val) ? val[0] : val)} />
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">新建倒数日</h2>
+              <span className="text-gray-400 cursor-pointer text-xl" onClick={() => setShowAdd(false)}>✕</span>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <div className="text-sm text-gray-600 mb-1">标题</div>
+                <Input placeholder="输入标题" value={newTitle} onChange={setNewTitle} />
+              </div>
+              <div>
+                <div className="text-sm text-gray-600 mb-1">目标日期</div>
+                <div
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-600 cursor-pointer"
+                  onClick={() => setShowDatePicker(true)}
+                >
+                  {newDate || '点击选择日期'}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600 mb-1">封面图（可选）</div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  {newCover ? (
+                    <Image src={newCover} className="w-20 h-20 rounded-lg" fit="cover" />
+                  ) : (
+                    <div className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                      <PictureOutline className="text-gray-400 text-xl" />
+                    </div>
+                  )}
+                  <input type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
+                </label>
+              </div>
+              <button
+                className="w-full bg-purple-600 text-white py-3 rounded-xl text-base font-medium active:bg-purple-700"
+                onClick={handleAdd}
+              >
+                创建
+              </button>
+            </div>
           </div>
         </div>
       )}
+
+      <DatePicker
+        visible={showDatePicker}
+        onClose={() => setShowDatePicker(false)}
+        onConfirm={handleDateConfirm}
+        title="选择日期"
+      />
 
       <FloatingBubble
         style={{ '--initial-position-bottom': '80px', '--initial-position-right': '20px', '--edge-distance': '20px' } as any}

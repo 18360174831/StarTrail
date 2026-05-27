@@ -37,11 +37,13 @@ router.post('/login', async (req: Request, res: Response) => {
     const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username) as any;
     if (!user) return res.status(401).json({ error: '用户名或密码错误' });
 
+    if (user.status === 'disabled') return res.status(403).json({ error: '账号已被禁用，请联系管理员' });
+
     const isValid = await bcrypt.compare(password, user.password_hash);
     if (!isValid) return res.status(401).json({ error: '用户名或密码错误' });
 
-    const token = generateToken({ id: user.id, username: user.username });
-    res.json({ success: true, message: '登录成功', data: { token, user: { id: user.id, username: user.username, nickname: user.nickname, avatar_url: user.avatar_url, bio: user.bio } } });
+    const token = generateToken({ id: user.id, username: user.username, role: user.role });
+    res.json({ success: true, message: '登录成功', data: { token, user: { id: user.id, username: user.username, nickname: user.nickname, avatar_url: user.avatar_url, bio: user.bio, role: user.role } } });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -50,7 +52,7 @@ router.post('/login', async (req: Request, res: Response) => {
 router.get('/me', authMiddleware, (req: AuthRequest, res: Response) => {
   try {
     const db = getDB();
-    const user = db.prepare('SELECT id, username, nickname, avatar_url, bio, created_at FROM users WHERE id = ?').get(req.user!.id);
+    const user = db.prepare('SELECT id, username, nickname, avatar_url, bio, role, created_at FROM users WHERE id = ?').get(req.user!.id);
     if (!user) return res.status(404).json({ error: '用户不存在' });
     res.json({ success: true, data: user });
   } catch (error: any) {

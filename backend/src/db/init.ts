@@ -24,6 +24,8 @@ export function initDB() {
       nickname TEXT NOT NULL,
       avatar_url TEXT,
       bio TEXT DEFAULT '',
+      role TEXT DEFAULT 'user',
+      status TEXT DEFAULT 'active',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
@@ -98,6 +100,7 @@ export function initDB() {
       target_date TEXT NOT NULL,
       icon TEXT,
       color TEXT,
+      cover_image TEXT,
       is_pinned INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id)

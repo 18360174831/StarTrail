@@ -10,6 +10,7 @@ import countdownRoutes from './routes/countdowns';
 import socialRoutes from './routes/social';
 import notificationRoutes from './routes/notifications';
 import uploadRoutes from './routes/upload';
+import adminRoutes from './routes/admin';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -29,6 +30,7 @@ app.use('/api/countdowns', countdownRoutes);
 app.use('/api/social', socialRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

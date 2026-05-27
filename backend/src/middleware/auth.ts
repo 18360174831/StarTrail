@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 const JWT_SECRET = process.env.JWT_SECRET || 'startrail-secret-key';
 
 export interface AuthRequest extends Request {
-  user?: { id: string; username: string };
+  user?: { id: string; username: string; role?: string };
 }
 
 export function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
@@ -13,7 +13,7 @@ export function authMiddleware(req: AuthRequest, res: Response, next: NextFuncti
     return res.status(401).json({ error: '未授权，请先登录' });
   }
   try {
-    const decoded = jwt.verify(authHeader.substring(7), JWT_SECRET) as { id: string; username: string };
+    const decoded = jwt.verify(authHeader.substring(7), JWT_SECRET) as { id: string; username: string; role?: string };
     req.user = decoded;
     next();
   } catch (error) {
@@ -21,6 +21,6 @@ export function authMiddleware(req: AuthRequest, res: Response, next: NextFuncti
   }
 }
 
-export function generateToken(user: { id: string; username: string }): string {
+export function generateToken(user: { id: string; username: string; role?: string }): string {
   return jwt.sign(user, JWT_SECRET, { expiresIn: '7d' });
 }

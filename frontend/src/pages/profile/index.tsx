@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Card, List, Avatar, Dialog } from 'antd-mobile'
+import { Card, List, Avatar } from 'antd-mobile'
 import { RightOutline } from 'antd-mobile-icons'
 import { getProfile } from '../../api/user'
 import { useDemoCheck } from '../../components/DemoBanner'
@@ -29,13 +29,10 @@ export default function ProfilePage() {
     } catch {}
   }
 
-  const handleLogout = async () => {
-    const confirmed = await Dialog.confirm({ content: isDemo ? '退出 Demo 模式？' : '确定退出登录吗？' })
-    if (confirmed) {
-      localStorage.removeItem('token')
-      localStorage.removeItem('demo')
-      navigate('/login')
-    }
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('demo')
+    navigate('/login', { replace: true })
   }
 
   return (

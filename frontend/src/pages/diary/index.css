@@ -1,6 +1,0 @@
-.diary-card {
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.diary-card:active {
-  transform: scale(0.98);
-}

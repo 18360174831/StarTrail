@@ -3,28 +3,26 @@ import { useNavigate } from 'react-router-dom'
 import { Card, Grid } from 'antd-mobile'
 import { EditSOutline, LocationOutline, ClockCircleOutline, UserOutline } from 'antd-mobile-icons'
 import { getDiaryList } from '../../api/diary'
-import { getFootprintStats } from '../../api/map'
+import { getVenueStats } from '../../api/venue'
 import { getCountdownList } from '../../api/countdown'
 
 export default function HomePage() {
   const navigate = useNavigate()
   const [stats, setStats] = useState({ diaries: 0, venues: 0, countdowns: 0 })
 
-  useEffect(() => {
-    loadData()
-  }, [])
+  useEffect(() => { loadData() }, [])
 
   const loadData = async () => {
     try {
-      const [diaryRes, footprintRes, countdownRes] = await Promise.all([
+      const [diaryRes, venueRes, countdownRes]: any[] = await Promise.all([
         getDiaryList({ limit: 1 }),
-        getFootprintStats(),
+        getVenueStats(),
         getCountdownList(),
       ])
       setStats({
-        diaries: (diaryRes as any)?.total || 0,
-        venues: (footprintRes as any)?.data?.totalVenues || 0,
-        countdowns: (countdownRes as any)?.data?.length || 0,
+        diaries: diaryRes?.data?.pagination?.total || 0,
+        venues: venueRes?.data?.totalVenues || 0,
+        countdowns: countdownRes?.data?.length || 0,
       })
     } catch {}
   }

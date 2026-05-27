@@ -1,13 +1,19 @@
 import request from './request'
 
-export const getVenues = (params?: { province?: string; city?: string }) =>
+export const getVenues = (params?: { city?: string; page?: number; limit?: number }) =>
   request.get('/venues', { params })
 
-export const getFootprints = () =>
-  request.get('/footprints')
+export const getVenueDetail = (id: string) =>
+  request.get(`/venues/${id}`)
 
-export const addFootprint = (data: { venueId: string; visitDate: string; note?: string }) =>
-  request.post('/footprints', data)
+export const getFootprints = () =>
+  request.get('/venues/footprints/me')
+
+export const addFootprint = (data: { venue_id: string; visit_date: string; note?: string }) =>
+  request.post('/venues/footprints', data)
+
+export const deleteFootprint = (id: string) =>
+  request.delete(`/venues/footprints/${id}`)
 
 export const getFootprintStats = () =>
-  request.get('/footprints/stats')
+  request.get('/venues/stats/me')

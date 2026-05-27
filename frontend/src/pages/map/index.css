@@ -1,6 +1,0 @@
-.footprint-card {
-  transition: transform 0.2s;
-}
-.footprint-card:active {
-  transform: scale(0.98);
-}

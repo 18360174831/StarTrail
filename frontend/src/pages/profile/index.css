@@ -1,0 +1,7 @@
+.profile-card {
+  background: linear-gradient(135deg, #6c5ce7, #a29bfe) !important;
+  color: white !important;
+}
+.profile-card .adm-card-body {
+  color: white;
+}

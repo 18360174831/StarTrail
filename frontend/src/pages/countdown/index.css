@@ -1,0 +1,6 @@
+.countdown-card {
+  transition: transform 0.2s;
+}
+.countdown-card:active {
+  transform: scale(0.98);
+}

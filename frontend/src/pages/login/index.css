@@ -1,0 +1,17 @@
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.login-card {
+  animation: fade-in 0.6s ease-out;
+}
+
+.login-logo {
+  animation-duration: 2s;
+}
+
+.login-btn {
+  background: linear-gradient(135deg, #6c5ce7, #a29bfe) !important;
+  border: none !important;
+}

@@ -208,10 +208,8 @@ export default function CountdownPage() {
       <FloatingBubble
         style={{ '--initial-position-bottom': '80px', '--initial-position-right': '20px', '--edge-distance': '20px' } as any}
         onClick={() => {
-        onClick: () => {
           if (isDemo) { showLoginDialog('创建倒数日'); return }
           setShowAdd(true)
-        }
         }}
       >
         <AddOutline fontSize={24} />

@@ -22,7 +22,21 @@ export default function CountdownPage() {
   const [newDate, setNewDate] = useState('')
   const [newCover, setNewCover] = useState('')
   const [showDatePicker, setShowDatePicker] = useState(false)
-  const { checkAction } = useDemoCheck()
+  const { isDemo } = useDemoCheck()
+
+  const showLoginDialog = (action: string) => {
+    Dialog.confirm({
+      title: '需要登录',
+      content: `请登录后使用${action}功能`,
+      confirmText: '去登录',
+      cancelText: '取消',
+      onConfirm: () => {
+        localStorage.removeItem('token')
+        localStorage.removeItem('demo')
+        window.location.href = '/login'
+      },
+    })
+  }
 
   useEffect(() => { loadCountdowns() }, [])
 
@@ -58,7 +72,7 @@ export default function CountdownPage() {
   }
 
   const handleAdd = async () => {
-    if (!checkAction('创建倒数日')) return
+    if (isDemo) { showLoginDialog('创建倒数日'); return }
     if (!newTitle || !newDate) {
       Toast.show({ content: '请填写完整信息', position: 'center' })
       return
@@ -77,7 +91,7 @@ export default function CountdownPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!checkAction('删除倒数日')) return
+    if (isDemo) { showLoginDialog('删除倒数日'); return }
     const confirmed = await Dialog.confirm({ content: '确定删除这个倒数日吗？' })
     if (confirmed) {
       try {
@@ -194,8 +208,10 @@ export default function CountdownPage() {
       <FloatingBubble
         style={{ '--initial-position-bottom': '80px', '--initial-position-right': '20px', '--edge-distance': '20px' } as any}
         onClick={() => {
-          if (!checkAction('创建倒数日')) return
+        onClick: () => {
+          if (isDemo) { showLoginDialog('创建倒数日'); return }
           setShowAdd(true)
+        }
         }}
       >
         <AddOutline fontSize={24} />

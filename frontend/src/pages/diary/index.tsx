@@ -36,7 +36,21 @@ export default function DiaryPage() {
   const [viewerVisible, setViewerVisible] = useState(false)
   const [viewerImages, setViewerImages] = useState<string[]>([])
   const [viewerIndex, setViewerIndex] = useState(0)
-  const { checkAction } = useDemoCheck()
+  const { isDemo } = useDemoCheck()
+
+  const showLoginDialog = (action: string) => {
+    Dialog.confirm({
+      title: '需要登录',
+      content: `请登录后使用${action}功能`,
+      confirmText: '去登录',
+      cancelText: '取消',
+      onConfirm: () => {
+        localStorage.removeItem('token')
+        localStorage.removeItem('demo')
+        window.location.href = '/login'
+      },
+    })
+  }
 
   const loadMore = useCallback(async () => {
     try {
@@ -51,7 +65,7 @@ export default function DiaryPage() {
   }, [page, loaded])
 
   const handleDelete = async (id: string) => {
-    if (!checkAction('删除日记')) return
+    if (isDemo) { showLoginDialog('删除日记'); return }
     const confirmed = await Dialog.confirm({ content: '确定删除这条日记吗？' })
     if (confirmed) {
       try { await deleteDiary(id); setDiaries((prev) => prev.filter((d) => d.id !== id)); Toast.show({ content: '已删除', position: 'center' }) } catch {}
@@ -59,7 +73,7 @@ export default function DiaryPage() {
   }
 
   const handleLike = async (diary: Diary) => {
-    if (!checkAction('点赞')) return
+    if (isDemo) { showLoginDialog('点赞'); return }
     try {
       if (diary.is_liked) { await unlikeDiary(diary.id) } else { await likeDiary(diary.id) }
       setDiaries((prev) => prev.map((d) => d.id === diary.id ? { ...d, is_liked: !d.is_liked, like_count: d.is_liked ? (d.like_count || 1) - 1 : (d.like_count || 0) + 1 } : d))
@@ -83,7 +97,7 @@ export default function DiaryPage() {
   }
 
   const handlePublish = async () => {
-    if (!checkAction('发布')) return
+    if (isDemo) { showLoginDialog('发布'); return }
     if (!publishTitle || !publishContent) {
       Toast.show({ content: '请填写标题和内容', position: 'center' })
       return
@@ -226,7 +240,7 @@ export default function DiaryPage() {
       <FloatingBubble
         style={{ '--initial-position-bottom': '80px', '--initial-position-right': '20px', '--edge-distance': '20px' } as any}
         onClick={() => {
-          if (!checkAction('发布')) return
+          if (isDemo) { showLoginDialog('发布'); return }
           setShowPublish(true)
         }}
       >

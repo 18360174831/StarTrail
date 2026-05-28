@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
 import DemoBanner from './components/DemoBanner'
+import { VersionPrompt } from './components/VersionCheck'
 import LoginPage from './pages/login'
 import HomePage from './pages/home'
 import DiaryPage from './pages/diary'
@@ -46,6 +47,7 @@ export default function App() {
         <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+      <VersionPrompt />
     </>
   )
 }

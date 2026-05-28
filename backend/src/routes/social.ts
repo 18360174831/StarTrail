@@ -1,12 +1,12 @@
 import { Router, Response } from 'express';
 import { getDB } from '../db/init';
 import { generateId } from '../utils/helpers';
-import { authMiddleware, AuthRequest } from '../middleware/auth';
+import { authMiddleware, optionalAuth, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
 // Comments
-router.get('/comments/:diaryId', (req: AuthRequest, res: Response) => {
+router.get('/comments/:diaryId', optionalAuth, (req: AuthRequest, res: Response) => {
   try {
     const db = getDB();
     const comments = db.prepare(`SELECT c.*, u.nickname as author_name, u.avatar_url as author_avatar FROM comments c LEFT JOIN users u ON c.user_id = u.id WHERE c.diary_id = ? ORDER BY c.created_at ASC`).all(req.params.diaryId);
@@ -107,7 +107,7 @@ router.delete('/follow/:userId', authMiddleware, (req: AuthRequest, res: Respons
   }
 });
 
-router.get('/followers/:userId', (req: AuthRequest, res: Response) => {
+router.get('/followers/:userId', optionalAuth, (req: AuthRequest, res: Response) => {
   try {
     const db = getDB();
     const followers = db.prepare(`SELECT u.id, u.username, u.nickname, u.avatar_url, u.bio, f.created_at as followed_at FROM follows f LEFT JOIN users u ON f.follower_id = u.id WHERE f.following_id = ? ORDER BY f.created_at DESC`).all(req.params.userId);
@@ -117,7 +117,7 @@ router.get('/followers/:userId', (req: AuthRequest, res: Response) => {
   }
 });
 
-router.get('/following/:userId', (req: AuthRequest, res: Response) => {
+router.get('/following/:userId', optionalAuth, (req: AuthRequest, res: Response) => {
   try {
     const db = getDB();
     const following = db.prepare(`SELECT u.id, u.username, u.nickname, u.avatar_url, u.bio, f.created_at as followed_at FROM follows f LEFT JOIN users u ON f.following_id = u.id WHERE f.follower_id = ? ORDER BY f.created_at DESC`).all(req.params.userId);
@@ -137,13 +137,28 @@ router.get('/is-following/:userId', authMiddleware, (req: AuthRequest, res: Resp
   }
 });
 
+// 推荐流（游客可访问，只返回公开内容）
+router.get('/feed/recommend', optionalAuth, (req: AuthRequest, res: Response) => {
+  try {
+    const db = getDB();
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const offset = (page - 1) * limit;
+    const diaries = db.prepare(`SELECT d.*, u.nickname as author_name, u.avatar_url as author_avatar, i.name as idol_name FROM diaries d LEFT JOIN users u ON d.user_id = u.id LEFT JOIN idols i ON d.idol_id = i.id WHERE d.visibility = 'public' ORDER BY d.like_count DESC, d.created_at DESC LIMIT ? OFFSET ?`).all(limit, offset);
+    res.json({ success: true, data: diaries });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 关注动态（需登录）
 router.get('/feed', authMiddleware, (req: AuthRequest, res: Response) => {
   try {
     const db = getDB();
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
     const offset = (page - 1) * limit;
-    const diaries = db.prepare(`SELECT d.*, u.nickname as author_name, u.avatar_url as author_avatar, i.name as idol_name FROM diaries d LEFT JOIN users u ON d.user_id = u.id LEFT JOIN idols i ON d.idol_id = i.id WHERE d.user_id IN (SELECT following_id FROM follows WHERE follower_id = ?) OR d.user_id = ? ORDER BY d.created_at DESC LIMIT ? OFFSET ?`).all(req.user!.id, req.user!.id, limit, offset);
+    const diaries = db.prepare(`SELECT d.*, u.nickname as author_name, u.avatar_url as author_avatar, i.name as idol_name FROM diaries d LEFT JOIN users u ON d.user_id = u.id LEFT JOIN idols i ON d.idol_id = i.id WHERE (d.user_id IN (SELECT following_id FROM follows WHERE follower_id = ?) OR d.user_id = ?) AND (d.user_id = ? OR d.visibility != 'private') ORDER BY d.created_at DESC LIMIT ? OFFSET ?`).all(req.user!.id, req.user!.id, req.user!.id, limit, offset);
     res.json({ success: true, data: diaries });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { getDB } from '../db/init';
 import { generateId } from '../utils/helpers';
-import { authMiddleware, AuthRequest } from '../middleware/auth';
+import { authMiddleware, optionalAuth, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
@@ -27,11 +27,25 @@ router.get('/', (req: AuthRequest, res: Response) => {
   }
 });
 
-router.get('/:id', (req: AuthRequest, res: Response) => {
+router.get('/:id', optionalAuth, (req: AuthRequest, res: Response) => {
   try {
     const db = getDB();
-    const diary = db.prepare(`SELECT d.*, u.nickname as author_name, u.avatar_url as author_avatar, i.name as idol_name FROM diaries d LEFT JOIN users u ON d.user_id = u.id LEFT JOIN idols i ON d.idol_id = i.id WHERE d.id = ?`).get(req.params.id);
+    const diary = db.prepare(`SELECT d.*, u.nickname as author_name, u.avatar_url as author_avatar, i.name as idol_name FROM diaries d LEFT JOIN users u ON d.user_id = u.id LEFT JOIN idols i ON d.idol_id = i.id WHERE d.id = ?`).get(req.params.id) as any;
     if (!diary) return res.status(404).json({ error: '日记不存在' });
+
+    // 权限检查
+    const userId = req.user?.id;
+    if (diary.user_id !== userId) {
+      if (diary.visibility === 'private') {
+        return res.status(403).json({ error: '无权查看' });
+      }
+      if (diary.visibility === 'followers') {
+        if (!userId) return res.status(403).json({ error: '无权查看' });
+        const isFollowing = db.prepare('SELECT 1 FROM follows WHERE follower_id = ? AND following_id = ?').get(userId, diary.user_id);
+        if (!isFollowing) return res.status(403).json({ error: '仅关注者可查看' });
+      }
+    }
+
     res.json({ success: true, data: diary });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -90,10 +104,18 @@ router.get('/user/me', authMiddleware, (req: AuthRequest, res: Response) => {
   }
 });
 
-router.get('/user/:userId', (req: AuthRequest, res: Response) => {
+router.get('/user/:userId', optionalAuth, (req: AuthRequest, res: Response) => {
   try {
     const db = getDB();
-    const diaries = db.prepare(`SELECT d.*, i.name as idol_name FROM diaries d LEFT JOIN idols i ON d.idol_id = i.id WHERE d.user_id = ? AND d.visibility = 'public' ORDER BY d.created_at DESC`).all(req.params.userId);
+    const userId = req.user?.id;
+    let diaries;
+    if (userId === req.params.userId) {
+      // 查自己的：返回全部
+      diaries = db.prepare(`SELECT d.*, i.name as idol_name FROM diaries d LEFT JOIN idols i ON d.idol_id = i.id WHERE d.user_id = ? ORDER BY d.created_at DESC`).all(req.params.userId);
+    } else {
+      // 查别人的：返回公开 + 关注者可见（需已关注）
+      diaries = db.prepare(`SELECT d.*, i.name as idol_name FROM diaries d LEFT JOIN idols i ON d.idol_id = i.id WHERE d.user_id = ? AND (d.visibility = 'public' OR (d.visibility = 'followers' AND EXISTS (SELECT 1 FROM follows WHERE follower_id = ? AND following_id = ?))) ORDER BY d.created_at DESC`).all(req.params.userId, userId || '', req.params.userId);
+    }
     res.json({ success: true, data: diaries });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

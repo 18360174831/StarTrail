@@ -34,10 +34,25 @@ export default function LoginPage() {
     }
   }
 
-  const handleDemo = () => {
-    localStorage.setItem('token', 'demo-token')
-    localStorage.setItem('demo', 'true')
-    window.location.href = '/'
+  const handleDemo = async () => {
+    setLoading(true)
+    try {
+      // Try demo account first, fallback to admin
+      let res: any
+      try {
+        res = await login('demo', 'demo123')
+      } catch {
+        res = await login('admin', 'admin123')
+      }
+      localStorage.setItem('token', res?.data?.token)
+      localStorage.setItem('demo', 'true')
+      Toast.show({ content: '欢迎体验 StarTrail！', position: 'center' })
+      navigate('/', { replace: true })
+    } catch {
+      Toast.show({ content: 'Demo 登录失败，请稍后重试', position: 'center' })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

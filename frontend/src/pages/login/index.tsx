@@ -1,22 +1,37 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Form, Input, Button, Toast } from 'antd-mobile'
+import { EyeOutline, EyeInvisibleOutline } from 'antd-mobile-icons'
 import { login, register } from '../../api/user'
 import './index.css'
 
 export default function LoginPage() {
   const [isRegister, setIsRegister] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [passwordVisible, setPasswordVisible] = useState(false)
+  const [confirmVisible, setConfirmVisible] = useState(false)
   const navigate = useNavigate()
 
   const onFinish = async (values: Record<string, string>) => {
+    // 注册表单前端校验
+    if (isRegister) {
+      if (!values.username || values.username.trim().length === 0) {
+        Toast.show({ content: '请输入用户名', position: 'center' })
+        return
+      }
+      if (!values.password || values.password.length < 8) {
+        Toast.show({ content: '密码长度至少8位', position: 'center' })
+        return
+      }
+      if (values.password !== values.confirmPassword) {
+        Toast.show({ content: '两次密码不一致', position: 'center' })
+        return
+      }
+    }
+
     setLoading(true)
     try {
       if (isRegister) {
-        if (values.password !== values.confirmPassword) {
-          Toast.show({ content: '两次密码不一致', position: 'center' })
-          return
-        }
         await register(values.username, values.password)
         Toast.show({ content: '注册成功，请登录', position: 'center' })
         setIsRegister(false)
@@ -28,7 +43,8 @@ export default function LoginPage() {
         navigate('/', { replace: true })
       }
     } catch (err: any) {
-      Toast.show({ content: err.response?.data?.error || '操作失败', position: 'center' })
+      const msg = err.response?.data?.error || '操作失败'
+      Toast.show({ content: msg, position: 'center' })
     } finally {
       setLoading(false)
     }
@@ -65,18 +81,77 @@ export default function LoginPage() {
             </Button>
           </div>
         }>
-          <Form.Item name="username" label="用户名" rules={[{ required: true, message: '请输入用户名' }]}>
+          <Form.Item
+            name="username"
+            label="用户名"
+            rules={[{ required: true, message: '请输入用户名' }]}
+          >
             <Input placeholder="请输入用户名" clearable className="!rounded-lg" />
           </Form.Item>
-          <Form.Item name="password" label="密码" rules={[{ required: true, message: '请输入密码' }]}>
-            <Input type="password" placeholder="请输入密码" clearable className="!rounded-lg" />
+
+          <Form.Item
+            name="password"
+            label={isRegister ? '密码（至少8位）' : '密码'}
+            rules={[
+              { required: true, message: '请输入密码' },
+              ...(isRegister ? [{ min: 8, message: '密码长度至少8位' }] : []),
+            ]}
+          >
+            <div className="relative">
+              <Input
+                type={passwordVisible ? 'text' : 'password'}
+                placeholder={isRegister ? '请输入密码，至少8位' : '请输入密码'}
+                clearable
+                className="!rounded-lg !pr-10"
+              />
+              <span
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer text-lg"
+                onClick={() => setPasswordVisible(!passwordVisible)}
+              >
+                {passwordVisible ? <EyeOutline /> : <EyeInvisibleOutline />}
+              </span>
+            </div>
           </Form.Item>
+
           {isRegister && (
-            <Form.Item name="confirmPassword" label="确认密码" rules={[{ required: true, message: '请再次输入密码' }]}>
-              <Input type="password" placeholder="请再次输入密码" clearable className="!rounded-lg" />
+            <Form.Item
+              name="confirmPassword"
+              label="确认密码"
+              rules={[
+                { required: true, message: '请再次输入密码' },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value || getFieldValue('password') === value) {
+                      return Promise.resolve()
+                    }
+                    return Promise.reject(new Error('两次密码不一致'))
+                  },
+                }),
+              ]}
+            >
+              <div className="relative">
+                <Input
+                  type={confirmVisible ? 'text' : 'password'}
+                  placeholder="请再次输入密码"
+                  clearable
+                  className="!rounded-lg !pr-10"
+                />
+                <span
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer text-lg"
+                  onClick={() => setConfirmVisible(!confirmVisible)}
+                >
+                  {confirmVisible ? <EyeOutline /> : <EyeInvisibleOutline />}
+                </span>
+              </div>
             </Form.Item>
           )}
         </Form>
+
+        {isRegister && (
+          <div className="text-xs text-gray-400 mt-2 px-1">
+            💡 密码需至少8位，支持字母、数字和常用符号
+          </div>
+        )}
 
         <div className="text-center mt-4">
           <span className="text-gray-500 text-sm">{isRegister ? '已有账号？' : '没有账号？'}</span>

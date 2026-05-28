@@ -77,6 +77,7 @@ export default function CountdownPage() {
   }
 
   const handleDelete = async (id: string) => {
+    if (!checkAction('删除倒数日')) return
     const confirmed = await Dialog.confirm({ content: '确定删除这个倒数日吗？' })
     if (confirmed) {
       try {

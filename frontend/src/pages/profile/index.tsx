@@ -23,6 +23,7 @@ export default function ProfilePage() {
   useEffect(() => { loadProfile() }, [])
 
   const loadProfile = async () => {
+    if (isDemo) return // No API call needed in demo mode
     try {
       const res: any = await getProfile()
       setUser(res?.data || null)

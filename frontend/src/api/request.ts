@@ -16,7 +16,8 @@ request.interceptors.request.use((config) => {
 request.interceptors.response.use(
   (res) => res.data,
   (err) => {
-    if (err.response?.status === 401) {
+    // Don't redirect to login in demo mode
+    if (err.response?.status === 401 && localStorage.getItem('demo') !== 'true') {
       localStorage.removeItem('token')
       window.location.href = '/login'
     }

@@ -51,6 +51,7 @@ export default function DiaryPage() {
   }, [page, loaded])
 
   const handleDelete = async (id: string) => {
+    if (!checkAction('删除日记')) return
     const confirmed = await Dialog.confirm({ content: '确定删除这条日记吗？' })
     if (confirmed) {
       try { await deleteDiary(id); setDiaries((prev) => prev.filter((d) => d.id !== id)); Toast.show({ content: '已删除', position: 'center' }) } catch {}
